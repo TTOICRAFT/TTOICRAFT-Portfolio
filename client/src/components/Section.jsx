@@ -8,7 +8,9 @@ export default function Section({ id, eyebrow, title, subtitle, children }) {
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        // Large sections (especially the stacked project cards on phones) may
+        // never occupy 20% of the viewport, so use a lower reveal threshold.
+        viewport={{ once: true, amount: 0.05 }}
         transition={{ duration: reduceMotion ? 0 : 0.5, ease: 'easeOut' }}
       >
         <div className="mb-10">
