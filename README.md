@@ -12,7 +12,7 @@ Personal portfolio website for **Owolabi Israel**, a data analyst and Mechanical
 - Skills and toolkit covering SQL, Python, Power BI, Tableau, relational databases, and cloud data platforms.
 - Contact form, email, and WhatsApp links.
 - A resume page with separate downloads for the one-page resume and the full CV.
-- Vercel deployment configuration with a serverless contact endpoint.
+- Vercel deployment configuration for the site and API services.
 
 The project cover images served by the site are in `client/public/projects/`. Their original PNG files are preserved in `docs/source-assets/project-covers/`.
 
@@ -21,7 +21,7 @@ The project cover images served by the site are in `client/public/projects/`. Th
 - **Frontend:** React 18, Vite 6, Tailwind CSS 3
 - **Motion and visuals:** Framer Motion, Three.js, Lucide icons
 - **Local contact API:** Express and Nodemailer
-- **Hosted contact API:** Vercel serverless function
+- **Hosted contact API:** Express service on Vercel Services
 - **Hosting:** Vercel
 
 ## Run locally
@@ -61,14 +61,14 @@ Build the frontend locally:
 npm run build
 ```
 
-For Vercel, the repository's `vercel.json` runs `npm run vercel-build`, publishes the generated `dist` directory, and routes `/api/contact` to the serverless function in `api/`. Add the SMTP environment variables in Vercel before enabling email delivery.
+For Vercel, the root `vercel.json` defines a Vite frontend service from `client/` and an Express API service from `server/`. Requests to `/api/*` go to the Express service; other requests go to the portfolio frontend. Add the SMTP environment variables in Vercel before enabling email delivery.
 
 ## Project structure
 
 ```text
 .
 |-- api/
-|   `-- contact.mjs                 # Vercel contact form function
+|   `-- contact.mjs                 # Standalone Vercel contact function
 |-- client/
 |   |-- public/
 |   |   |-- projects/               # Optimized project cover images
@@ -85,7 +85,7 @@ For Vercel, the repository's `vercel.json` runs `npm run vercel-build`, publishe
 |   |-- email-service.js            # SMTP email transport
 |   `-- server.js                   # Local Express API and static server
 |-- package.json                    # npm workspaces and root scripts
-`-- vercel.json                     # Vercel build and routing configuration
+`-- vercel.json                     # Vercel multi-service routing configuration
 ```
 
 ## Contact
