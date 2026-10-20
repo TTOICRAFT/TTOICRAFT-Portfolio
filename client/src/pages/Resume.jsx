@@ -1,0 +1,160 @@
+import { useEffect, useRef, useState } from 'react'
+import { Footer } from '../components/Footer'
+
+export default function ResumePage() {
+  const [pdfUrl, setPdfUrl] = useState(null)   // blob URL if we verified a real PDF
+  const [useImage, setUseImage] = useState(true)
+  const [imgOk, setImgOk] = useState(false)
+  const [imgDims, setImgDims] = useState({ w: null, h: null })
+  const imgRef = useRef(null)
+
+  // Load a verified PDF for the fallback viewer (the download stays user-initiated).
+  useEffect(() => {
+    let revoked = false
+    let objectUrl
+    ;(async () => {
+      try {
+        const res = await fetch('/resume.pdf', { cache: 'no-store' })
+        const type = res.headers.get('Content-Type') || ''
+        if (!res.ok || !type.includes('application/pdf')) throw new Error('Not a PDF')
+        const blob = await res.blob()
+        if (blob.size < 1024) throw new Error('Tiny file')
+        const url = URL.createObjectURL(blob)
+        if (revoked) {
+          URL.revokeObjectURL(url)
+          return
+        }
+        objectUrl = url
+        setPdfUrl(url)
+      } catch {
+        setPdfUrl(null)
+      }
+    })()
+    return () => { revoked = true; if (objectUrl) URL.revokeObjectURL(objectUrl) }
+  }, [])
+
+  // Prefer image preview; detect availability + capture natural size
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => {
+      setImgOk(true)
+      setImgDims({ w: img.naturalWidth, h: img.naturalHeight })
+    }
+    img.onerror = () => setUseImage(false)
+    img.src = '/resume.png'
+  }, [])
+
+  const onImgLoad = () => {
+    const el = imgRef.current
+    if (!el) return
+    setImgDims({ w: el.naturalWidth, h: el.naturalHeight })
+  }
+
+  return (
+    <div className="min-h-screen overflow-x-hidden">
+      {/* Ambient glow (keeps the site’s background feel) */}
+      <div className="fixed inset-0 -z-10 pointer-events-none shadow-glow" />
+
+      {/* No Navbar on this page as requested */}
+
+      <main className="container pt-10 md:pt-12 space-y-8">
+        <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Resume and CV</p>
+            <h1 className="mt-1 text-3xl md:text-4xl font-display font-extrabold gradient-text">
+              Owolabi Israel — Resume &amp; CV
+            </h1>
+            <p className="text-slate-400 mt-2">
+              View the one-page resume below, or download either version.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/resume.pdf"
+              download="Owolabi_Israel_Resume.pdf"
+              className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white"
+            >
+              Download Resume
+            </a>
+            <a
+              href="/cv.pdf"
+              download="Owolabi_Israel_Data_Analyst_CV.pdf"
+              className="px-4 py-2 rounded-xl border border-primary-400/40 glass hover:border-primary-300 text-slate-100"
+            >
+              Download Full CV
+            </a>
+            <a
+              href="/"
+              className="px-4 py-2 rounded-xl border border-white/10 glass hover:border-white/20"
+            >
+              ← Back to Home
+            </a>
+          </div>
+        </header>
+
+        {/* Viewer */}
+        {useImage && imgOk ? (
+          // Outer wrapper allows horizontal scroll if image is wider than the viewport
+          <div className="w-full overflow-auto">
+            <div
+              className="mx-auto rounded-xl border border-white/10 glass overflow-hidden"
+              style={{
+                width: imgDims.w ? `min(100%, ${imgDims.w}px)` : '100%',
+                maxWidth: '100%'
+              }}
+            >
+              <img
+                ref={imgRef}
+                src="/resume.png"
+                alt="Resume preview"
+                onLoad={onImgLoad}
+                className="block w-full h-auto"
+                loading="eager"
+              />
+            </div>
+          </div>
+        ) : pdfUrl ? (
+          <section className="rounded-xl border border-white/10 glass overflow-hidden">
+            <object data={pdfUrl} type="application/pdf" className="w-full h-[75vh] md:h-[80vh]">
+              <iframe title="Resume PDF" src={pdfUrl} className="w-full h-[75vh] md:h-[80vh] border-0" />
+            </object>
+          </section>
+        ) : (
+          <section className="rounded-xl border border-white/10 glass p-6 text-slate-300">
+            Couldn’t verify the PDF on this environment. You can still{' '}
+            <a href="/resume.pdf" className="text-primary-200 hover:text-white underline underline-offset-4">
+              download it directly
+            </a>.
+          </section>
+        )}
+
+        {/* Optional viewer toggle if you keep both paths */}
+        {(imgOk || pdfUrl) && (
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <span>Viewer mode:</span>
+            <button
+              onClick={() => setUseImage(true)}
+              className={`px-3 py-1 rounded-lg border ${
+                useImage ? 'border-primary-600 text-slate-200' : 'border-white/10 hover:border-white/20'
+              }`}
+            >
+              Image
+            </button>
+            <button
+              onClick={() => setUseImage(false)}
+              className={`px-3 py-1 rounded-lg border ${
+                !useImage ? 'border-primary-600 text-slate-200' : 'border-white/10 hover:border-white/20'
+              }`}
+            >
+              PDF
+            </button>
+          </div>
+        )}
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
+
+

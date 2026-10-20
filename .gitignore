@@ -1,0 +1,13 @@
+gitignore
+node_modules
+*.log
+.env
+.DS_Store
+dist
+.vercel
+.netlify
+.venv/
+.typography-profile/
+tmp/
+output/
+typography-desktop.png
